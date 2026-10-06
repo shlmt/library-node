@@ -2,9 +2,9 @@ import AdminJS from "adminjs";
 import AdminJSExpress from "@adminjs/express";
 import * as AdminJSMongoose from "@adminjs/mongoose";
 
-import { Member } from "@/entities/member/member.model.js";
-import { Book } from "@/entities/book/book.model.js";
-import { BookCopy } from "@/entities/bookCopy/bookCopy.model.js";
+import { Member } from "../entities/member/member.model.js";
+import { Book } from "../entities/book/book.model.js";
+import { BookCopy } from "../entities/bookCopy/bookCopy.model.js";
 
 AdminJS.registerAdapter({
   Resource: AdminJSMongoose.Resource,
@@ -22,7 +22,7 @@ export const createAdminRouter = async () => {
           navigation: {
             name: "Library",
             icon: "User",
-          },
+          }
         },
       },
 
@@ -48,19 +48,20 @@ export const createAdminRouter = async () => {
     ],
   });
 
-  return AdminJSExpress.buildAuthenticatedRouter(admin, {
-    authenticate: async (email, password) => {
-      if (
-        email === process.env.ADMIN_EMAIL &&
-        password === process.env.ADMIN_PASSWORD
-      ) {
-        return { email };
-      }
+  // return AdminJSExpress.buildAuthenticatedRouter(admin, {
+  //   authenticate: async (email, password) => {
+  //     if (
+  //       email === process.env.ADMIN_EMAIL &&
+  //       password === process.env.ADMIN_PASSWORD
+  //     ) {
+  //       return { email };
+  //     }
 
-      return null;
-    },
+  //     return null;
+  //   },
 
-    cookieName: "library-admin",
-    cookiePassword: process.env.SESSION_SECRET,
-  });
+  //   cookieName: "library-admin",
+  //   cookiePassword: process.env.SESSION_SECRET,
+  // });
+  return AdminJSExpress.buildRouter(admin);
 };

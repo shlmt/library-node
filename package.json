@@ -12,7 +12,14 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@adminjs/express": "^6.1.1",
+    "@adminjs/mongoose": "^4.1.0",
+    "adminjs": "^7.8.17",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "express-formidable": "^1.2.0",
+    "express-session": "^1.19.0",
+    "mongoose": "^9.9.4"
   }
 }
-
-// npm install express mongoose dotenv cors adminjs @adminjs/express @adminjs/mongoose express-formidable express-session
