@@ -1,3 +1,12 @@
+/**
+ * @openapi
+ * /api/books:
+ *   get:
+ *     summary: Get all books
+ *     responses:
+ *       200:
+ *         description: List of books
+ */
 import express from "express";
 import { bookRepository } from "./book.repository.js";
 

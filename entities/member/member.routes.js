@@ -1,3 +1,12 @@
+/**
+ * @openapi
+ * /api/members:
+ *   get:
+ *     summary: Get all members
+ *     responses:
+ *       200:
+ *         description: List of members
+ */
 import express from "express";
 import { memberRepository } from "./member.repository.js";
 

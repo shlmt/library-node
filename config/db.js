@@ -1,68 +1,129 @@
-import mongoose from "mongoose";
-import { Book } from "../entities/book/book.model.js";
-import { BookCopy } from "../entities/bookCopy/bookCopy.model.js";
-import { Member } from "../entities/member/member.model.js";
+import fs from "fs";
+import path from "path";
+import Database from "better-sqlite3";
 
-const initializeDB = async () => {
-  const [memberCount, bookCount, bookCopyCount] = await Promise.all([
-    Member.countDocuments(),
-    Book.countDocuments(),
-    BookCopy.countDocuments(),
-  ]);
+let sqliteDatabase;
 
-  if (memberCount > 0 || bookCount > 0 || bookCopyCount > 0) {
+export const getSQLiteDatabase = () => {
+  if (sqliteDatabase) {
+    return sqliteDatabase;
+  }
+
+  const sqlitePath = process.env.SQLITE_PATH || path.join(process.cwd(), "data", "library.sqlite");
+  const directory = path.dirname(sqlitePath);
+
+  fs.mkdirSync(directory, { recursive: true });
+
+  sqliteDatabase = new Database(sqlitePath);
+  sqliteDatabase.pragma("foreign_keys = ON");
+
+  return sqliteDatabase;
+};
+
+const initializeSQLiteDB = () => {
+  const db = getSQLiteDatabase();
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS books (
+      _id TEXT PRIMARY KEY,
+      title TEXT NOT NULL,
+      author TEXT NOT NULL,
+      publisher TEXT NOT NULL,
+      category TEXT NOT NULL,
+      createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS members (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL,
+      membershipNumber TEXT NOT NULL UNIQUE,
+      createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      isActive INTEGER NOT NULL DEFAULT 1,
+      note TEXT NOT NULL DEFAULT ''
+    );
+
+    CREATE TABLE IF NOT EXISTS book_copies (
+      _id TEXT PRIMARY KEY,
+      titleIsbn TEXT NOT NULL,
+      inStock INTEGER NOT NULL DEFAULT 1,
+      createdAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      updatedAt TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (titleIsbn) REFERENCES books(_id)
+    );
+  `);
+};
+
+const initializeSQLiteSeedData = () => {
+  const db = getSQLiteDatabase();
+
+  const hasBooks = db.prepare("SELECT COUNT(*) AS count FROM books").get().count;
+  if (hasBooks > 0) {
     return;
   }
 
-  const books = await Book.create([
-    {
-      _id: "978-0132350884",
-      title: "Clean Code",
-      author: "Robert C. Martin",
-      publisher: "Prentice Hall",
-      category: "Programming",
-    },
-    {
-      _id: "978-1491950296",
-      title: "Designing Data-Intensive Applications",
-      author: "Martin Kleppmann",
-      publisher: "O'Reilly Media",
-      category: "Databases",
-    },
-    {
-      _id: "978-1617294945",
-      title: "Learning Node.js",
-      author: "Marc Harter",
-      publisher: "Manning",
-      category: "Programming",
-    },
-  ]);
+  db.transaction(() => {
+    db.prepare(
+      "INSERT INTO books (_id, title, author, publisher, category) VALUES (?, ?, ?, ?, ?)"
+    ).run(
+      "978-0132350884",
+      "Clean Code",
+      "Robert C. Martin",
+      "Prentice Hall",
+      "Programming",
+    );
 
-  await Promise.all([
-    Member.create([
-      { name: "Alice Cohen", membershipNumber: "10001" },
-      { name: "David Levi", membershipNumber: "10002" },
-    ]),
-    BookCopy.create([
-      { _id: "001", titleIsbn: books[0]._id },
-      { _id: "002", titleIsbn: books[0]._id },
-      { _id: "003", titleIsbn: books[1]._id },
-      { _id: "004", titleIsbn: books[2]._id },
-      { _id: "005", titleIsbn: books[2]._id },
-    ]),
-  ]);
+    db.prepare(
+      "INSERT INTO books (_id, title, author, publisher, category) VALUES (?, ?, ?, ?, ?)"
+    ).run(
+      "978-1491950296",
+      "Designing Data-Intensive Applications",
+      "Martin Kleppmann",
+      "O'Reilly Media",
+      "Databases",
+    );
 
-  console.log("Database initialized with sample data");
+    db.prepare(
+      "INSERT INTO books (_id, title, author, publisher, category) VALUES (?, ?, ?, ?, ?)"
+    ).run(
+      "978-1617294945",
+      "Learning Node.js",
+      "Marc Harter",
+      "Manning",
+      "Programming",
+    );
+
+    db.prepare(
+      "INSERT INTO members (name, membershipNumber, isActive, note) VALUES (?, ?, ?, ?)"
+    ).run("Alice Cohen", "10001", 1, "");
+
+    db.prepare(
+      "INSERT INTO members (name, membershipNumber, isActive, note) VALUES (?, ?, ?, ?)"
+    ).run("David Levi", "10002", 1, "");
+
+    db.prepare(
+      "INSERT INTO book_copies (_id, titleIsbn, inStock) VALUES (?, ?, ?)"
+    ).run("001", "978-0132350884", 1);
+    db.prepare(
+      "INSERT INTO book_copies (_id, titleIsbn, inStock) VALUES (?, ?, ?)"
+    ).run("002", "978-0132350884", 1);
+    db.prepare(
+      "INSERT INTO book_copies (_id, titleIsbn, inStock) VALUES (?, ?, ?)"
+    ).run("003", "978-1491950296", 1);
+    db.prepare(
+      "INSERT INTO book_copies (_id, titleIsbn, inStock) VALUES (?, ?, ?)"
+    ).run("004", "978-1617294945", 1);
+    db.prepare(
+      "INSERT INTO book_copies (_id, titleIsbn, inStock) VALUES (?, ?, ?)"
+    ).run("005", "978-1617294945", 1);
+  })();
+
+  console.log("SQLite sample data initialized");
 };
 
 export const connectDB = async () => {
-  try {
-    await mongoose.connect(process.env.MONGO_URI);
-    await initializeDB();
-
-    console.log("MongoDB connected");
-  } catch (error) {
-    console.error("MongoDB connection failed:", error);
-    process.exit(1);
-  }
+  initializeSQLiteDB();
+  initializeSQLiteSeedData();
+  console.log("SQLite connected");
 };
