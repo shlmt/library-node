@@ -1,9 +1,10 @@
 import "dotenv/config";
 import express from "express";
 import cors from "cors";
+import swaggerUi from "swagger-ui-express";
 
 import { connectDB } from "./config/db.js";
-import { createAdminRouter } from "./admin/admin.js";
+import { openApiSpec } from "./config/openapi.js";
 
 import memberRoutes from "./entities/member/member.routes.js";
 import bookRoutes from "./entities/book/book.routes.js";
@@ -21,15 +22,13 @@ app.use("/api/members", memberRoutes);
 app.use("/api/books", bookRoutes);
 app.use("/api/book-copies", bookCopyRoutes);
 
-// AdminJS
-const adminRouter = await createAdminRouter();
-app.use("/admin", adminRouter);
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
 // Start server
 connectDB().then(() => {
     app.listen(PORT, () => {
         console.log(`Server running on http://localhost:${PORT}`);
-        console.log(`AdminJS running on http://localhost:${PORT}/admin`);
+        console.log(`Swagger UI running on http://localhost:${PORT}/api-docs`);
     });
 }).catch((err) => {
     console.error("Failed to connect to the database:", err);
