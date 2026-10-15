@@ -1,12 +1,30 @@
 import { BookCopy } from "./bookCopy.model.js";
 
+const withBookDetails = (copy, book) => {
+  const bookData = book.toObject();
+  const bookId = bookData._id;
+  const isbnId = bookData.isbn;
+  delete bookData._id;
+  delete bookData.isbn;
+  delete bookData.createdAt;
+  delete bookData.updatedAt;
+  delete bookData.copies;
+
+  const copyData = copy.toObject();
+  copyData.book = bookId;
+
+  return { ...copyData, isbnId, ...bookData };
+};
+
 export const bookCopyRepository = {
-  findAll() {
-    return BookCopy.find().populate("book").sort({ _id: 1 });
+  async findAll() {
+    const copies = await BookCopy.find().populate("book").sort({ _id: 1 });
+    return copies.map((copy) => withBookDetails(copy, copy.book));
   },
 
-  findById(barcode) {
-    return BookCopy.findById(barcode).populate("book");
+  async findById(barcode) {
+    const copy = await BookCopy.findById(barcode).populate("book");
+    return copy ? withBookDetails(copy, copy.book) : null;
   },
 
   async create(data) {
@@ -16,7 +34,8 @@ export const bookCopyRepository = {
       status: data.status,
     });
 
-    return bookCopy.populate("book");
+    const populatedCopy = await bookCopy.populate("book");
+    return withBookDetails(populatedCopy, populatedCopy.book);
   },
 
   async update(barcode, data) {
@@ -48,7 +67,8 @@ export const bookCopyRepository = {
     }
     await bookCopy.save();
 
-    return bookCopy.populate("book");
+    const populatedCopy = await bookCopy.populate("book");
+    return withBookDetails(populatedCopy, populatedCopy.book);
   },
 
   delete(barcode) {

@@ -4,12 +4,14 @@ import { bookRepository } from "./book.repository.js";
 const router = express.Router();
 
 router.get("/", async (req, res) => {
-  const books = await bookRepository.findAll();
+  const includeCopies = req.query.includeCopies !== "false";
+  const books = await bookRepository.findAll({ includeCopies });
   res.json(books);
 });
 
 router.get("/:isbn", async (req, res) => {
-  const book = await bookRepository.findByIsbn(req.params.isbn);
+  const includeCopies = req.query.includeCopies !== "false";
+  const book = await bookRepository.findByIsbn(req.params.isbn, { includeCopies });
 
   if (!book) {
     return res.status(404).json({ message: "Title not found" });

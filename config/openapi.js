@@ -1,9 +1,37 @@
-const crudPaths = ({ path, id, tag, name, createSchema, updateSchema, deleteConflict = false }) => ({
+const crudPaths = ({
+  path,
+  id,
+  tag,
+  name,
+  createSchema,
+  updateSchema,
+  deleteConflict = false,
+  getQueryParameters = [],
+  getListResponseSchema,
+  getResponseSchema,
+}) => ({
   [`${path}`]: {
     get: {
       tags: [tag],
       summary: `List ${name}`,
-      responses: { 200: { description: `${name} list` } },
+      ...(getQueryParameters.length > 0 ? { parameters: getQueryParameters } : {}),
+      responses: {
+        200: {
+          description: `${name} list`,
+          ...(getListResponseSchema
+            ? {
+                content: {
+                  "application/json": {
+                    schema: {
+                      type: "array",
+                      items: { $ref: `#/components/schemas/${getListResponseSchema}` },
+                    },
+                  },
+                },
+              }
+            : {}),
+        },
+      },
     },
     post: {
       tags: [tag],
@@ -23,7 +51,22 @@ const crudPaths = ({ path, id, tag, name, createSchema, updateSchema, deleteConf
     get: {
       tags: [tag],
       summary: `Get ${name.slice(0, -1)}`,
-      responses: { 200: { description: "Found" }, 404: { description: "Not found" } },
+      ...(getQueryParameters.length > 0 ? { parameters: getQueryParameters } : {}),
+      responses: {
+        200: {
+          description: "Found",
+          ...(getResponseSchema
+            ? {
+                content: {
+                  "application/json": {
+                    schema: { $ref: `#/components/schemas/${getResponseSchema}` },
+                  },
+                },
+              }
+            : {}),
+        },
+        404: { description: "Not found" },
+      },
     },
     put: {
       tags: [tag],
@@ -68,6 +111,17 @@ export const openApiSpec = {
       createSchema: "BookInput",
       updateSchema: "BookInput",
       deleteConflict: true,
+      getListResponseSchema: "BookResponse",
+      getResponseSchema: "BookResponse",
+      getQueryParameters: [
+        {
+          name: "includeCopies",
+          in: "query",
+          required: false,
+          schema: { type: "boolean", default: true },
+          description: "Set to false to omit copies from the response",
+        },
+      ],
     }),
     ...crudPaths({
       path: "/api/members",
@@ -97,6 +151,33 @@ export const openApiSpec = {
           author: { type: "string" },
           publisher: { type: "string" },
           category: { type: "string" },
+        },
+      },
+      BookResponse: {
+        type: "object",
+        required: ["_id", "isbn", "title", "author", "publisher", "category"],
+        properties: {
+          _id: { type: "string", description: "ObjectId of the book" },
+          isbn: { type: "string", example: "978-0132350884" },
+          title: { type: "string" },
+          author: { type: "string" },
+          publisher: { type: "string" },
+          category: { type: "string" },
+          copies: {
+            type: "array",
+            description: "Included by default; omitted when includeCopies=false",
+            items: {
+              type: "object",
+              required: ["_id", "status"],
+              properties: {
+                _id: { type: "string", description: "Barcode of the copy" },
+                status: {
+                  type: "string",
+                  enum: ["new", "available", "underRepair", "lost", "outOfStock"],
+                },
+              },
+            },
+          },
         },
       },
       MemberInput: {

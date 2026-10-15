@@ -1,36 +1,77 @@
 import { Book } from "./book.model.js";
 import { BookCopy } from "../bookCopy/bookCopy.model.js";
 
+const withCopies = async (books) => {
+  if (books.length === 0) {
+    return [];
+  }
+
+  const copies = await BookCopy.find({
+    book: { $in: books.map((book) => book._id) },
+  })
+    .select("_id book status")
+    .sort({ _id: 1 })
+    .lean();
+
+  const copiesByBook = new Map(books.map((book) => [book._id.toString(), []]));
+  for (const copy of copies) {
+    copiesByBook.get(copy.book.toString()).push({
+      _id: copy._id,
+      status: copy.status,
+    });
+  }
+
+  return books.map((book) => ({
+    ...book.toObject(),
+    copies: copiesByBook.get(book._id.toString()),
+  }));
+};
+
 export const bookRepository = {
-  findAll() {
-    return Book.find().sort({ title: 1 });
+  async findAll({ includeCopies = true } = {}) {
+    const books = await Book.find().sort({ title: 1 });
+    return includeCopies
+      ? withCopies(books)
+      : books.map((book) => book.toObject());
   },
 
-  findById(id) {
-    return Book.findById(id);
+  async findById(id) {
+    const book = await Book.findById(id);
+    return book ? (await withCopies([book]))[0] : null;
   },
 
-  findByIsbn(isbn) {
-    return Book.findOne({ isbn });
+  async findByIsbn(isbn, { includeCopies = true } = {}) {
+    const book = await Book.findOne({ isbn });
+    if (!book) {
+      return null;
+    }
+
+    return includeCopies
+      ? (await withCopies([book]))[0]
+      : book.toObject();
   },
 
-  create(data) {
-    return Book.create({
+  async create(data) {
+    const book = await Book.create({
       isbn: data.isbn,
       title: data.title,
       author: data.author,
       publisher: data.publisher,
       category: data.category,
     });
+
+    return (await withCopies([book]))[0];
   },
 
-  update(isbn, data) {
+  async update(isbn, data) {
     const { isbn: _, ...updateData } = data;
 
-    return Book.findOneAndUpdate({ isbn }, updateData, {
+    const book = await Book.findOneAndUpdate({ isbn }, updateData, {
       new: true,
       runValidators: true,
     });
+
+    return book ? (await withCopies([book]))[0] : null;
   },
 
   async delete(isbn) {
