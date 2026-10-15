@@ -1,5 +1,37 @@
 import { BookCopy } from "./bookCopy.model.js";
 
+const categoryDigits = {
+  קומיקס: "1",
+  ילדים: "2",
+  מנוקד: "3",
+  נוער: "4",
+  עיון: "5",
+  סיפורת: "6",
+  "מבוגרים בלבד": "7",
+  מתכונים: "8",
+  "פסיכולוגיה ורפואה": "9",
+};
+
+const createBarcode = async (book) => {
+  const isbnDigits = book.isbn.replace(/\D/g, "");
+  if (isbnDigits.length < 2) {
+    const error = new Error("Book ISBN must contain at least two digits");
+    error.name = "ValidationError";
+    throw error;
+  }
+
+  const prefix = `${categoryDigits[book.category] ?? "0"}-${isbnDigits.slice(-2)}`;
+  const matchingCopies = await BookCopy.find({
+    _id: new RegExp(`^${prefix}-\\d+$`),
+  }).select("_id").lean();
+  const nextNumber = matchingCopies.reduce((highest, copy) => {
+    const number = Number(copy._id.slice(prefix.length + 1));
+    return Math.max(highest, number);
+  }, 0) + 1;
+
+  return `${prefix}-${nextNumber}`;
+};
+
 const withBookDetails = (copy, book) => {
   const bookData = book.toObject();
   const bookId = bookData._id;
@@ -27,9 +59,9 @@ export const bookCopyRepository = {
     return copy ? withBookDetails(copy, copy.book) : null;
   },
 
-  async create(data) {
+  async create(data, book) {
     const bookCopy = await BookCopy.create({
-      _id: data.barcode,
+      _id: await createBarcode(book),
       book: data.book,
       status: data.status,
     });

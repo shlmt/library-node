@@ -20,8 +20,8 @@ router.get("/:barcode", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  if (!req.body?.barcode || !req.body?.book) {
-    return res.status(400).json({ message: "Barcode and book ID are required" });
+  if (!req.body?.book) {
+    return res.status(400).json({ message: "Book ID is required" });
   }
 
   const book = await bookRepository.findById(req.body.book);
@@ -30,7 +30,7 @@ router.post("/", async (req, res) => {
     return res.status(404).json({ message: "Cannot create book copy: book does not exist" });
   }
 
-  const bookCopy = await bookCopyRepository.create(req.body);
+  const bookCopy = await bookCopyRepository.create(req.body, book);
   res.status(201).json(bookCopy);
 });
 

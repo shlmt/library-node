@@ -200,9 +200,8 @@ export const openApiSpec = {
       },
       BookCopyInput: {
         type: "object",
-        required: ["barcode", "book"],
+        required: ["book"],
         properties: {
-          barcode: { type: "string" },
           book: { type: "string", description: "ObjectId of the book" },
           status: {
             type: "string",
