@@ -15,6 +15,17 @@ const memberSchema = new mongoose.Schema(
       trim: true,
     },
 
+    membershipType: {
+      type: new mongoose.Schema(
+        {
+          name: { type: String, required: true, trim: true },
+          maxBooks: { type: Number, required: true, min: 0 },
+        },
+        { _id: false },
+      ),
+      required: true,
+    },
+
     createdAt: {
       type: Date,
       default: Date.now,

@@ -105,6 +105,14 @@ export const openApiSpec = {
         properties: {
           name: { type: "string" },
           membershipNumber: { type: "string" },
+          membershipType: {
+            type: "object",
+            required: ["name", "maxBooks"],
+            properties: {
+              name: { type: "string" },
+              maxBooks: { type: "integer", minimum: 0 },
+            },
+          },
           isActive: { type: "boolean", default: true },
           note: { type: "string" },
         },

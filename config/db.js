@@ -47,8 +47,16 @@ const initializeDB = async () => {
   ]);
 
   await Member.create([
-    { name: "Alice Cohen", membershipNumber: "10001" },
-    { name: "David Levi", membershipNumber: "10002" },
+    {
+      name: "Alice Cohen",
+      membershipNumber: "10001",
+      membershipType: { name: "Standard", maxBooks: 5 },
+    },
+    {
+      name: "David Levi",
+      membershipNumber: "10002",
+      membershipType: { name: "Standard", maxBooks: 5 },
+    },
   ]);
 
   console.log("Database initialized with sample data");
