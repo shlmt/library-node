@@ -2,9 +2,11 @@ import mongoose from "mongoose";
 
 const bookSchema = new mongoose.Schema(
   {
-    _id: {
+    isbn: {
       type: String,
       required: true,
+      unique: true,
+      trim: true,
     },
 
     title: {
@@ -30,6 +32,7 @@ const bookSchema = new mongoose.Schema(
       required: true,
       trim: true,
     },
+
   },
   {
     versionKey: false,

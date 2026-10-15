@@ -16,21 +16,21 @@ const initializeDB = async () => {
 
   const books = await Book.create([
     {
-      _id: "978-0132350884",
+      isbn: "978-0132350884",
       title: "Clean Code",
       author: "Robert C. Martin",
       publisher: "Prentice Hall",
       category: "Programming",
     },
     {
-      _id: "978-1491950296",
+      isbn: "978-1491950296",
       title: "Designing Data-Intensive Applications",
       author: "Martin Kleppmann",
       publisher: "O'Reilly Media",
       category: "Databases",
     },
     {
-      _id: "978-1617294945",
+      isbn: "978-1617294945",
       title: "Learning Node.js",
       author: "Marc Harter",
       publisher: "Manning",
@@ -38,18 +38,17 @@ const initializeDB = async () => {
     },
   ]);
 
-  await Promise.all([
-    Member.create([
-      { name: "Alice Cohen", membershipNumber: "10001" },
-      { name: "David Levi", membershipNumber: "10002" },
-    ]),
-    BookCopy.create([
-      { _id: "001", titleIsbn: books[0]._id },
-      { _id: "002", titleIsbn: books[0]._id },
-      { _id: "003", titleIsbn: books[1]._id },
-      { _id: "004", titleIsbn: books[2]._id },
-      { _id: "005", titleIsbn: books[2]._id },
-    ]),
+  await BookCopy.create([
+    { _id: "001", book: books[0]._id },
+    { _id: "002", book: books[0]._id },
+    { _id: "003", book: books[1]._id },
+    { _id: "004", book: books[2]._id },
+    { _id: "005", book: books[2]._id },
+  ]);
+
+  await Member.create([
+    { name: "Alice Cohen", membershipNumber: "10001" },
+    { name: "David Levi", membershipNumber: "10002" },
   ]);
 
   console.log("Database initialized with sample data");

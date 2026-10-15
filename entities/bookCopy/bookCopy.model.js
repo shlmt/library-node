@@ -7,10 +7,10 @@ const bookCopySchema = new mongoose.Schema(
       required: true,
     },
 
-    titleIsbn: {
-      type: String,
-      required: true,
+    book: {
+      type: mongoose.Schema.Types.ObjectId,
       ref: "Book",
+      required: true,
     },
 
     inStock: {

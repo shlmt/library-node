@@ -2,28 +2,38 @@ import { BookCopy } from "./bookCopy.model.js";
 
 export const bookCopyRepository = {
   findAll() {
-    return BookCopy.find().populate("titleIsbn");
+    return BookCopy.find().populate("book").sort({ _id: 1 });
   },
 
   findById(barcode) {
-    return BookCopy.findById(barcode).populate("titleIsbn");
+    return BookCopy.findById(barcode).populate("book");
   },
 
-  create(data) {
-    return BookCopy.create({
+  async create(data) {
+    const bookCopy = await BookCopy.create({
       _id: data.barcode,
-      titleIsbn: data.titleIsbn,
+      book: data.book,
       inStock: data.inStock,
     });
+
+    return bookCopy.populate("book");
   },
 
-  update(barcode, data) {
-    const { barcode: _, ...updateData } = data;
+  async update(barcode, data) {
+    const bookCopy = await BookCopy.findById(barcode);
+    if (!bookCopy) {
+      return null;
+    }
 
-    return BookCopy.findByIdAndUpdate(barcode, updateData, {
-      new: true,
-      runValidators: true,
-    }).populate("titleIsbn");
+    if (data.book !== undefined) {
+      bookCopy.book = data.book;
+    }
+    if (data.inStock !== undefined) {
+      bookCopy.inStock = data.inStock;
+    }
+    await bookCopy.save();
+
+    return bookCopy.populate("book");
   },
 
   delete(barcode) {

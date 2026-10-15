@@ -9,7 +9,7 @@ router.get("/", async (req, res) => {
 });
 
 router.get("/:isbn", async (req, res) => {
-  const book = await bookRepository.findById(req.params.isbn);
+  const book = await bookRepository.findByIsbn(req.params.isbn);
 
   if (!book) {
     return res.status(404).json({ message: "Title not found" });
@@ -42,6 +42,10 @@ router.delete("/:isbn", async (req, res) => {
 
   if (!book) {
     return res.status(404).json({ message: "Title not found" });
+  }
+
+  if (book.conflict) {
+    return res.status(409).json({ message: "Cannot delete a book that has copies" });
   }
 
   res.status(204).send();

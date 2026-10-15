@@ -20,7 +20,11 @@ router.get("/:barcode", async (req, res) => {
 });
 
 router.post("/", async (req, res) => {
-  const book = await bookRepository.findById(req.body.titleIsbn);
+  if (!req.body?.barcode || !req.body?.book) {
+    return res.status(400).json({ message: "Barcode and book ID are required" });
+  }
+
+  const book = await bookRepository.findById(req.body.book);
 
   if (!book) {
     return res.status(404).json({ message: "Cannot create book copy: book does not exist" });
@@ -31,11 +35,11 @@ router.post("/", async (req, res) => {
 });
 
 router.put("/:barcode", async (req, res) => {
-  if (req.body.titleIsbn) {
-    const title = await bookRepository.findById(req.body.titleIsbn);
+  if (req.body.book) {
+    const book = await bookRepository.findById(req.body.book);
 
-    if (!title) {
-      return res.status(404).json({ message: "Cannot assign book copy to non-existing title" });
+    if (!book) {
+      return res.status(404).json({ message: "Cannot assign book copy to a non-existing book" });
     }
   }
 
