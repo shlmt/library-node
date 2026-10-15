@@ -13,9 +13,10 @@ const bookCopySchema = new mongoose.Schema(
       required: true,
     },
 
-    inStock: {
-      type: Boolean,
-      default: true,
+    status: {
+      type: String,
+      enum: ["new", "available", "underRepair", "lost", "outOfStock"],
+      default: "new",
     },
   },
   {

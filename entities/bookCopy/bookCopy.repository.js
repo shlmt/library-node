@@ -13,7 +13,7 @@ export const bookCopyRepository = {
     const bookCopy = await BookCopy.create({
       _id: data.barcode,
       book: data.book,
-      inStock: data.inStock,
+      status: data.status,
     });
 
     return bookCopy.populate("book");
@@ -28,8 +28,23 @@ export const bookCopyRepository = {
     if (data.book !== undefined) {
       bookCopy.book = data.book;
     }
-    if (data.inStock !== undefined) {
-      bookCopy.inStock = data.inStock;
+
+    if (data.status !== undefined) {
+      const allowedTransitions = {
+        new: ["available", "underRepair", "lost", "outOfStock"],
+        available: ["underRepair", "lost", "outOfStock"],
+        underRepair: ["available", "lost", "outOfStock"],
+        lost: ["available", "outOfStock"],
+        outOfStock: [],
+      };
+
+      if (data.status !== bookCopy.status && !allowedTransitions[bookCopy.status]?.includes(data.status)) {
+        const error = new Error(`Cannot change status from ${bookCopy.status} to ${data.status}`);
+        error.name = "ValidationError";
+        throw error;
+      }
+
+      bookCopy.status = data.status;
     }
     await bookCopy.save();
 

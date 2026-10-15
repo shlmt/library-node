@@ -1,4 +1,4 @@
-const crudPaths = ({ path, id, tag, name, createSchema, updateSchema }) => ({
+const crudPaths = ({ path, id, tag, name, createSchema, updateSchema, deleteConflict = false }) => ({
   [`${path}`]: {
     get: {
       tags: [tag],
@@ -37,7 +37,11 @@ const crudPaths = ({ path, id, tag, name, createSchema, updateSchema }) => ({
     delete: {
       tags: [tag],
       summary: `Delete ${name.slice(0, -1)}`,
-      responses: { 204: { description: "Deleted" }, 404: { description: "Not found" } },
+      responses: {
+        204: { description: "Deleted" },
+        404: { description: "Not found" },
+        ...(deleteConflict ? { 409: { description: "Conflict" } } : {}),
+      },
     },
   },
 });
@@ -63,6 +67,7 @@ export const openApiSpec = {
       name: "Books",
       createSchema: "BookInput",
       updateSchema: "BookInput",
+      deleteConflict: true,
     }),
     ...crudPaths({
       path: "/api/members",
@@ -106,11 +111,15 @@ export const openApiSpec = {
       },
       BookCopyInput: {
         type: "object",
-        required: ["barcode", "titleIsbn"],
+        required: ["barcode", "book"],
         properties: {
           barcode: { type: "string" },
-          titleIsbn: { type: "string", description: "ISBN of the book" },
-          inStock: { type: "boolean", default: true },
+          book: { type: "string", description: "ObjectId of the book" },
+          status: {
+            type: "string",
+            enum: ["new", "available", "underRepair", "lost", "outOfStock"],
+            default: "new",
+          },
         },
       },
     },

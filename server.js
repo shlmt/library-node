@@ -5,6 +5,7 @@ import swaggerUi from "swagger-ui-express";
 
 import { connectDB } from "./config/db.js";
 import { openApiSpec } from "./config/openapi.js";
+import { errorHandler } from "./middleware/errorHandler.js";
 
 import memberRoutes from "./entities/member/member.routes.js";
 import bookRoutes from "./entities/book/book.routes.js";
@@ -23,6 +24,7 @@ app.use("/api/books", bookRoutes);
 app.use("/api/book-copies", bookCopyRoutes);
 
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(openApiSpec));
+app.use(errorHandler);
 
 // Start server
 connectDB().then(() => {

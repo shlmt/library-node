@@ -39,9 +39,9 @@ const initializeDB = async () => {
   ]);
 
   await BookCopy.create([
-    { _id: "001", book: books[0]._id },
+    { _id: "001", book: books[0]._id, status: "available" },
     { _id: "002", book: books[0]._id },
-    { _id: "003", book: books[1]._id },
+    { _id: "003", book: books[1]._id, status: "lost" },
     { _id: "004", book: books[2]._id },
     { _id: "005", book: books[2]._id },
   ]);
